@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import requests
-from bs4 import BeautifulSoup
 import seaborn as sns
 import unicodedata
 
@@ -41,31 +40,30 @@ grouped_suapvalintas = round(grouped, 2)
 print(f'Gimstamumas apskrityse procentais: {grouped_suapvalintas}')
 
 
-# Nuskaityti CSV failą
+#gimstamumas pagal lytį
 df = pd.read_csv('statistikagime.csv')
 # Filtruoti duomenis pagal 'V' ir 'M' lytis
 df_filtruoti = df[df['lytis'].isin(['V', 'M'])]
-# Grupeiškite duomenis pagal 'year' ir 'lytis' ir apskaičiuokite sumą
+# Gruputi duomenis pagal 'year' ir 'lytis' ir apskaičiuoti sumą
 grouped = df_filtruoti.groupby(['year', 'lytis'])['suma'].sum().reset_index()
-# Pertvarkyti duomenis, kad gautumėte stulpeliniu formatu su 'V' ir 'M' stulpeliais
+# Pertvarkyti duomenis, kad gautumėme stulpeliniu formatu su 'V' ir 'M' stulpeliais
 gimstamumas_vm = grouped.pivot(index='year', columns='lytis', values='suma')
 # Vizualizuoti duomenis stulpelinėje diagramoje
 gimstamumas_vm.plot(kind='bar')
 plt.xlabel('Metai')
 plt.ylabel('Gimstamumas')
-plt.title('Vyrų ir moterų gimstamumas kiekvienais metais')
-plt.legend(['V', 'M'])
+plt.title('Gimstamumas pagal lytį')
+plt.legend(['Vyrai', 'Moterys'])
 plt.show()
-# Atspausdinti DataFrame su gimstamumu
-print(gimstamumas_vm)
 
+print(gimstamumas_vm)
 
 # Apskaičiuojame procentinį gimstamumo pasiskirstymą pagal regionus
 gimstamumas_regionais = df.groupby('region')['suma'].sum()
 procentai = gimstamumas_regionais / gimstamumas_regionais.sum() * 100
 # Vizualizuojame skritulinę diagramą su procentais pagal regionus
 plt.figure(figsize=(10, 6))
-plt.title('Gimstamumas apskrityse procentais')
+plt.title('Gimstamumas pagal apskritis')
 plt.pie(procentai, labels=procentai.index, autopct='%1.1f%%')
 plt.axis('equal')
 plt.show()
@@ -95,30 +93,133 @@ plt.show()
 # tada naudoja plt.pie() funkciją, kad vizualizuotų skritulinę diagramą su procentais.
 # autopct='%1.1f%%' nurodo, kad procentinė reikšmė bus rodoma su viena skaičiaus po kablelio tikslumu.
 # Šiame kodui pridėtas filtravimas, naudojant .str.contains() funkciją, kuri tikrina, ar tekste yra "_apskritis" žodis.
-# Taip galime atidžiau apibrėžti tik tuos įrašus, kurie atitinka jūsų reikalavimus.
 
 
-# grupuokime duomenis pagal mirimo priežastis ir gaukime vidutini mirtingumą
 
-mirtys = pd.read_csv('statistikamire.csv', encoding="utf8")
+# Metinis gimstamumo pokytis
 
-mirtys_filtruoti = mirtys[mirtys['lytis'] == 'VM']
 
-vidutinis_mirtingumas = mirtys_filtruoti.groupby(['metai', 'mirties_priezastis'])['suma'].mean()
+# gimstamumas = np.genfromtxt('gimstamumas1.csv', delimiter=',', encoding="utf8")
 
-# Konvertuojame grupavimo rezultatus į DataFrame
-vidutinis_mirtingumas = vidutinis_mirtingumas.reset_index()
-# Nubraižome linijinę diagramą
-plt.figure(figsize=(10, 6))
-# Iteruojame per unikalių mirties priežasčių sąrašą
-for priezastis in vidutinis_mirtingumas['mirties_priezastis'].unique():
-    # Filtruojame duomenis pagal mirties priežastį
-    duomenys = vidutinis_mirtingumas[vidutinis_mirtingumas['mirties_priezastis'] == priezastis]
-    # Nubraižome linijinę diagramą pagal metus ir vidutinį mirtingumą
-    plt.plot(duomenys['metai'], duomenys['suma'], marker='o', label=priezastis)
-# Pridedame ašių pavadinimus ir legendą
-plt.xlabel('Metai')
-plt.ylabel('Vidutinis mirtingumas')
+metai = np.array([2018, 2019, 2020, 2021, 2022])
+gimstamumas = np.array([28149, 27393, 25144, 23330, 22068])
+
+
+gimstamumo_pokytis = (gimstamumas[1:] - gimstamumas[:-1]) / gimstamumas[:-1] * 100
+# print(gimstamumo_pokytis)
+
+plt.plot(metai[1:], gimstamumo_pokytis, marker='o', color='pink', label='gimstamumas')
+
+plt.xlabel(xlabel='metai')
+plt.ylabel(ylabel='gimstamumo_pokytis')
+plt.title('Metinis gimstamumo pokytis procentais')
+
+tendencija = np.polyfit(metai[1:], gimstamumo_pokytis, 1)
+# prognoze
+prognoze = np.polyval(tendencija, metai[1:])
+
+plt.plot(metai[1:], prognoze, color='red', label='prognoze')
+plt.xlim(2018, 2023)
+plt.xticks(range(2018, 2023, 1))
 plt.legend()
-# Rodyti diagramą
 plt.show()
+
+
+# Metinis mirtingumo pokytis
+
+
+# mirtingumas = np.genfromtxt('mirtingumas.csv', delimiter=',', encoding="utf8")
+
+metai = np.array([2018, 2019, 2020, 2021, 2022])
+mirtingumas = np.array([39574, 38281, 43547, 47746, 42884])
+
+
+mirtingumo_pokytis = (mirtingumas[1:] - mirtingumas[:-1]) / mirtingumas[:-1] * 100
+# print(mirtingumo_pokytis)
+
+plt.plot(metai[1:], mirtingumo_pokytis, marker='o', color='pink', label='mirtingumas')
+
+plt.xlabel(xlabel='metai')
+plt.ylabel(ylabel='mirtingumo_pokytis')
+plt.title('Metinis mirtingumo pokytis procentais')
+
+tendencija = np.polyfit(metai[1:], mirtingumo_pokytis, 1)
+# prognoze
+prognoze = np.polyval(tendencija, metai[1:])
+
+plt.plot(metai[1:], prognoze, color='red', label='prognoze')
+plt.xlim(2018, 2023)
+plt.xticks(range(2018, 2023, 1))
+plt.legend()
+plt.show()
+
+
+# # Nuskaitome duomenis iš pirmojo CSV failo
+gime = np.genfromtxt('gimstamumas.csv', delimiter=',', encoding="utf8")
+x1 = gime[:, 0]
+y1 = gime[:, 1]
+
+mire = np.genfromtxt('mirtingumas.csv', delimiter=',', encoding="utf8")
+x2 = mire[:, 0]
+y2 = mire[:, 1]
+
+gime = pd.read_csv('gimstamumas.csv', delimiter=',', encoding="utf8")
+mire = pd.read_csv('mirtingumas.csv', delimiter=',', encoding="utf8")
+mire['metai'] = pd.to_datetime(mire['metai'])
+mire['Year'] = mire['metai'].dt.year
+#
+gime['metai'] = pd.to_datetime(gime['metai'])
+gime['Year'] = gime['metai'].dt.year
+
+# Nubraižome pirmąją kreivę
+plt.plot(x1, y1, label='Gimstamumas')
+plt.xlim(2017, 2023)
+plt.xticks(range(2017, 2023, 1))
+
+# Nubraižome antrąją kreivę
+plt.plot(x2, y2, label='Mirtingumas')
+
+# Rodyti reikšmių taškus ant pirmosios kreivės
+plt.scatter(x1, y1, color='red')
+
+# Rodyti reikšmių taškus ant antrosios kreivės
+plt.scatter(x2, y2, color='blue')
+
+# Pridedame skaičius virš taškų ant pirmosios kreivės
+for i in range(len(x1)):
+    plt.annotate(str(y1[i]), (x1[i], y1[i]), textcoords="offset points", xytext=(0,10), ha='center')
+
+# Pridedame skaičius virš taškų ant antrosios kreivės
+for i in range(len(x2)):
+    plt.annotate(str(y2[i]), (x2[i], y2[i]), textcoords="offset points", xytext=(0,10), ha='center')
+
+
+# Pridedame ašių pavadinimus ir grafiko pavadinimą
+plt.xlabel(xlabel='metai')
+plt.ylabel(ylabel='žmonių skaičius')
+plt.title('Mirtingumas ir gimstamumas 2018-2022 m.')
+
+# Pridedame legendą
+plt.legend()
+
+plt.show()
+
+
+# Mirtingumas pagal priežastis
+data = pd.read_csv('statistikamire.csv')
+# Grupuojame duomenis pagal metus ir mirties priežastis, ir sumuojame mirusiųjų skaičių
+mirties_priezastys = data.groupby(['metai', 'mirties_priezastis'])['suma'].sum().reset_index()
+# Rikiuojame mirties priežastis pagal mirusiųjų skaičių mažėjimo tvarka
+mirties_priezastys = mirties_priezastys.sort_values(['metai', 'suma'], ascending=[True, False])
+# Braižome grafiką naudodami seaborn
+plt.figure(figsize=(10, 6))
+sns.barplot(x='metai', y='suma', hue='mirties_priezastis', data=mirties_priezastys)
+plt.xticks(rotation=90)
+plt.xlabel = ('Metai')
+plt.ylabel = ('Mirusiųjų skaičius')
+plt.title('Mirtingumas pagal mirties priežastis')
+plt.tight_layout()
+# Rodyti grafiką
+plt.show()
+
+
